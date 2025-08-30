@@ -15,6 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="monetag" content="4adcdcc6686464bc2e3b0feb783aa005" />
         <script dangerouslySetInnerHTML={{ __html: `(s=>{s.dataset.zone=9562975,s.src='https://groleegni.net/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))` }} />
         <script src="https://fpyf8.com/88/tag.min.js" data-zone="156932" async data-cfasync="false"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
