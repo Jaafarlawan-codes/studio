@@ -1,3 +1,5 @@
+import KdpAuthorAiClient from "./kdp-author-ai-client";
+
 export default function Home() {
-  return <></>;
+  return <KdpAuthorAiClient />;
 }
