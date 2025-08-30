@@ -1,130 +1,146 @@
 "use client";
 
-import { aiPoweredWritingAssistance } from "@/ai/flows/ai-powered-writing-assistance";
+import { generateBook, GenerateBookInput } from "@/ai/flows/generate-book";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Loader2, Send, User, Bot } from "lucide-react";
-import React, { useCallback, useState, useRef, useEffect } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+import { BookOpen, Download, Loader2, Sparkles } from "lucide-react";
+import React, { useState } from "react";
 
 export default function KdpAuthorAiClient() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
+  const [formData, setFormData] = useState<GenerateBookInput>({ title: "", description: "", details: "" });
+  const [generatedBook, setGeneratedBook] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
-  const { toast } = useToast();
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
-        const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
-        if (viewport) {
-            viewport.scrollTop = viewport.scrollHeight;
-        }
-    }
+  const { toast } = useToast();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = useCallback(async (e: React.FormEvent) => {
+  const handleGenerateBook = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!formData.title || !formData.description || !formData.details) {
+       toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please fill out all fields to generate your book.",
+      });
+      return;
+    }
 
-    const userMessage: Message = { role: 'user', content: input };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
     setIsLoading(true);
+    setGeneratedBook(null);
 
     try {
-      const result = await aiPoweredWritingAssistance({ text: input });
-      const assistantMessage: Message = { role: 'assistant', content: result.enhancedText };
-      setMessages((prev) => [...prev, assistantMessage]);
+      const result = await generateBook(formData);
+      setGeneratedBook(result.bookContent);
+      toast({
+        title: "Book Generated Successfully!",
+        description: "Your book is ready for review and download.",
+      });
     } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Error getting response",
+        title: "Error Generating Book",
         description: "An unexpected error occurred. Please try again.",
       });
-      // remove the user message if the assistant fails to respond
-      setMessages(prev => prev.slice(0, prev.length -1));
     } finally {
       setIsLoading(false);
     }
-  }, [input, toast]);
+  };
+  
+  const handleDownload = () => {
+    if (!generatedBook || !formData.title) return;
+
+    const blob = new Blob([generatedBook], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const fileName = formData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    link.download = `${fileName}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
 
   return (
-    <div className="flex h-screen flex-col">
-      <header className="flex items-center gap-3 p-4 border-b bg-card">
+    <div className="flex flex-col min-h-screen bg-gray-50/50">
+      <header className="flex items-center gap-3 p-4 border-b bg-background">
         <div className="p-2 rounded-lg bg-primary/20 text-primary">
           <BookOpen className="w-6 h-6" />
         </div>
-        <h1 className="text-xl font-headline font-semibold">KDP Author AI Chatbot</h1>
+        <h1 className="text-xl font-headline font-semibold">KDP Author AI</h1>
       </header>
-      <main className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full" ref={scrollAreaRef}>
-          <div className="p-6 space-y-6">
-            {messages.map((message, index) => (
-              <div key={index} className={cn("flex items-start gap-4", message.role === 'user' ? 'justify-end' : '')}>
-                {message.role === 'assistant' && (
-                   <Avatar className="w-8 h-8 border">
-                    <AvatarFallback><Bot size={20}/></AvatarFallback>
-                  </Avatar>
-                )}
-                <div className={cn("max-w-xl rounded-lg p-4", message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-card')}>
-                  <p className="whitespace-pre-wrap">{message.content}</p>
-                </div>
-                 {message.role === 'user' && (
-                  <Avatar className="w-8 h-8 border">
-                    <AvatarFallback><User size={20} /></AvatarFallback>
-                  </Avatar>
-                )}
-              </div>
-            ))}
-             {isLoading && (
-              <div className="flex items-start gap-4">
-                <Avatar className="w-8 h-8 border">
-                  <AvatarFallback><Bot size={20}/></AvatarFallback>
-                </Avatar>
-                <div className="max-w-xl rounded-lg p-4 bg-card flex items-center">
-                  <Loader2 className="animate-spin" />
-                </div>
-              </div>
-            )}
-            {messages.length === 0 && !isLoading && (
-              <div className="text-center text-muted-foreground">
-                <p>Start a conversation with the AI author assistant!</p>
-                <p className="text-sm">You can ask it to write a chapter, suggest plot ideas, or help with character development.</p>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+
+      <main className="flex-1 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto grid gap-8">
+            <Card className="w-full">
+              <form onSubmit={handleGenerateBook}>
+                <CardHeader>
+                  <CardTitle>Create Your Next Bestseller</CardTitle>
+                  <CardDescription>Provide the details for your book, and let our AI bring it to life.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Book Title</Label>
+                    <Input id="title" placeholder="e.g., The Last Starlight" value={formData.title} onChange={handleInputChange} disabled={isLoading} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Book Description</Label>
+                    <Textarea id="description" placeholder="A short, catchy summary of your book." value={formData.description} onChange={handleInputChange} disabled={isLoading} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="details">Synopsis & Details</Label>
+                    <Textarea id="details" placeholder="Provide a detailed plot outline, character descriptions, chapter breakdown, and any specific instructions for the AI." rows={10} value={formData.details} onChange={handleInputChange} disabled={isLoading}/>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" disabled={isLoading} className="ml-auto">
+                    {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles className="mr-2" />}
+                    Generate Book
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center p-8 text-center bg-card rounded-lg shadow-sm">
+                <Loader2 className="w-12 h-12 mb-4 animate-spin text-primary" />
+                <p className="font-semibold text-lg">Generating your masterpiece...</p>
+                <p className="text-muted-foreground">This may take a few moments. Please don't close this page.</p>
+            </div>
+          )}
+
+          {generatedBook && !isLoading && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                        <CardTitle>Your Generated Book</CardTitle>
+                        <CardDescription>Review your book below. You can download it as a text file.</CardDescription>
+                    </div>
+                     <Button onClick={handleDownload} variant="outline">
+                        <Download className="mr-2" />
+                        Download (.txt)
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <div className="p-4 border rounded-md bg-gray-50 max-h-[600px] overflow-y-auto whitespace-pre-wrap font-body">
+                        <h2 className="text-2xl font-bold font-headline mb-4">{formData.title}</h2>
+                        {generatedBook}
+                    </div>
+                </CardContent>
+              </Card>
+          )}
+        </div>
       </main>
-      <footer className="p-4 border-t bg-card">
-        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask the AI to help you write..."
-            disabled={isLoading}
-            className="flex-1"
-          />
-          <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
-            {isLoading ? <Loader2 className="animate-spin" /> : <Send />}
-          </Button>
-        </form>
-      </footer>
     </div>
   );
 }
