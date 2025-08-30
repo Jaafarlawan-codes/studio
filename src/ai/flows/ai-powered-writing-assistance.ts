@@ -28,11 +28,11 @@ const prompt = ai.definePrompt({
   name: 'aiPoweredWritingAssistancePrompt',
   input: {schema: AiPoweredWritingAssistanceInputSchema},
   output: {schema: AiPoweredWritingAssistanceOutputSchema},
-  prompt: `You are an AI writing assistant. Your task is to enhance the given text for grammar, clarity, and style.
+  prompt: `You are an AI writing assistant chatbot for authors. A user is asking for help with their book. Your task is to provide a helpful and creative response.
 
-Original Text: {{{text}}}
+User's message: {{{text}}}
 
-Enhanced Text:`, // Fixed: Added 'Enhanced Text:' to guide the model output
+Your response:`,
 });
 
 const aiPoweredWritingAssistanceFlow = ai.defineFlow(
