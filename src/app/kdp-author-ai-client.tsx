@@ -1,3 +1,4 @@
+
 "use client";
 
 import { generateBook, GenerateBookInput, GenerateBookOutput } from "@/ai/flows/generate-book";
@@ -80,10 +81,12 @@ export default function KdpAuthorAiClient() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50/50">
       <header className="flex items-center gap-3 p-4 border-b bg-background">
-        <div className="p-2 rounded-lg bg-primary/20 text-primary">
-          <BookOpen className="w-6 h-6" />
-        </div>
-        <h1 className="text-xl font-headline font-semibold">KDP Author AI</h1>
+        <a href="/" className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/20 text-primary">
+            <BookOpen className="w-6 h-6" />
+            </div>
+            <h1 className="text-xl font-headline font-semibold">KDP Author AI</h1>
+        </a>
       </header>
 
       <main className="flex-1 p-4 md:p-8">
