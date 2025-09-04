@@ -17,8 +17,13 @@ const GenerateBookInputSchema = z.object({
 });
 export type GenerateBookInput = z.infer<typeof GenerateBookInputSchema>;
 
+const ChapterSchema = z.object({
+  title: z.string().describe('The title of the chapter.'),
+  content: z.string().describe('The content of the chapter.'),
+});
+
 const GenerateBookOutputSchema = z.object({
-  bookContent: z.string().describe('The full content of the generated book.'),
+  chapters: z.array(ChapterSchema).describe('The chapters of the generated book.'),
 });
 export type GenerateBookOutput = z.infer<typeof GenerateBookOutputSchema>;
 
@@ -39,7 +44,7 @@ Book Description: {{{description}}}
 Detailed Synopsis:
 {{{details}}}
 
-Please now write the full content of the book. Ensure it has a clear beginning, middle, and end, with well-developed chapters if applicable. The tone should be consistent with the description and synopsis. The output should be the book content only.`,
+Please now write the full content of the book. Ensure it has a clear beginning, middle, and end. The book must be structured into chapters, each with a title and content. The output should be a JSON object containing a list of chapters.`,
 });
 
 const generateBookFlow = ai.defineFlow(
@@ -50,6 +55,6 @@ const generateBookFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return {bookContent: output!.bookContent};
+    return {chapters: output!.chapters};
   }
 );

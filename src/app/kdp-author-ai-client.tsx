@@ -1,6 +1,6 @@
 "use client";
 
-import { generateBook, GenerateBookInput } from "@/ai/flows/generate-book";
+import { generateBook, GenerateBookInput, GenerateBookOutput } from "@/ai/flows/generate-book";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +12,7 @@ import React, { useState } from "react";
 
 export default function KdpAuthorAiClient() {
   const [formData, setFormData] = useState<GenerateBookInput>({ title: "", description: "", details: "" });
-  const [generatedBook, setGeneratedBook] = useState<string | null>(null);
+  const [generatedBook, setGeneratedBook] = useState<GenerateBookOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
@@ -38,7 +38,7 @@ export default function KdpAuthorAiClient() {
 
     try {
       const result = await generateBook(formData);
-      setGeneratedBook(result.bookContent);
+      setGeneratedBook(result);
       toast({
         title: "Book Generated Successfully!",
         description: "Your book is ready for review and download.",
@@ -58,7 +58,13 @@ export default function KdpAuthorAiClient() {
   const handleDownload = () => {
     if (!generatedBook || !formData.title) return;
 
-    const blob = new Blob([generatedBook], { type: 'text/plain;charset=utf-8' });
+    const bookContent = generatedBook.chapters.map(chapter => {
+      return `## ${chapter.title}\n\n${chapter.content}`;
+    }).join('\n\n\n');
+
+    const fullContent = `# ${formData.title}\n\n${bookContent}`;
+
+    const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -134,7 +140,12 @@ export default function KdpAuthorAiClient() {
                 <CardContent>
                     <div className="p-4 border rounded-md bg-gray-50 max-h-[600px] overflow-y-auto whitespace-pre-wrap font-body">
                         <h2 className="text-2xl font-bold font-headline mb-4">{formData.title}</h2>
-                        {generatedBook}
+                        {generatedBook.chapters.map((chapter, index) => (
+                          <div key={index} className="mb-8">
+                            <h3 className="text-xl font-bold font-headline mb-2">{chapter.title}</h3>
+                            <p>{chapter.content}</p>
+                          </div>
+                        ))}
                     </div>
                 </CardContent>
               </Card>
