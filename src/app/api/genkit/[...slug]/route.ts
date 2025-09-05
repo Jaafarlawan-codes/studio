@@ -1,7 +1,7 @@
 /**
  * @fileoverview Genkit API route for Next.js.
  */
+import {ai} from '@/ai/genkit';
+import {createApiHandler} from 'genkit/next';
 
-import {POST} from '@/ai/genkit';
-
-export {POST};
+export const {POST} = createApiHandler({ai});
