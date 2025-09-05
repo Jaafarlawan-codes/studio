@@ -3,52 +3,21 @@
  * @fileOverview This file defines Genkit flows for generating a book outline and individual chapters.
  *
  * - generateOutline - Generates a chapter-by-chapter outline for a book.
- * - GenerateOutlineInput - The input type for the generateOutline function.
- * - GenerateOutlineOutput - The return type for the generateOutline function.
- *
  * - generateChapter - Generates the content for a single chapter.
- * - GenerateChapterInput - The input type for the generateChapter function.
- * - GenerateChapterOutput - The return type for the generateChapter function.
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {
+    GenerateOutlineInputSchema,
+    GenerateOutlineOutputSchema,
+    GenerateChapterInputSchema,
+    ChapterSchema,
+    type GenerateOutlineInput,
+    type GenerateOutlineOutput,
+    type GenerateChapterInput,
+    type GenerateChapterOutput,
+} from './schemas';
 
-// Schemas for Chapter Outline Generation
-const GenerateOutlineInputSchema = z.object({
-  title: z.string().describe('The title of the book.'),
-  description: z.string().describe('A short description of the book.'),
-  details: z.string().describe('A detailed synopsis or prompt for the book content.'),
-});
-export type GenerateOutlineInput = z.infer<typeof GenerateOutlineInputSchema>;
-
-const ChapterOutlineSchema = z.object({
-  title: z.string().describe('The title of the chapter.'),
-  description: z.string().describe('A brief summary of what happens in this chapter.'),
-});
-
-const GenerateOutlineOutputSchema = z.object({
-  chapters: z.array(ChapterOutlineSchema).describe('The chapter outline for the book.'),
-});
-export type GenerateOutlineOutput = z.infer<typeof GenerateOutlineOutputSchema>;
-
-// Schemas for Single Chapter Generation
-const ChapterSchema = z.object({
-  title: z.string().describe('The title of the chapter.'),
-  content: z.string().describe('The full content of the chapter.'),
-});
-export type Chapter = z.infer<typeof ChapterSchema>;
-
-const GenerateChapterInputSchema = z.object({
-  title: z.string().describe('The title of the book.'),
-  description: z.string().describe('A short description of the book.'),
-  chapterOutline: z.array(ChapterOutlineSchema).describe('The full outline of the book.'),
-  targetChapter: ChapterOutlineSchema.describe('The specific chapter from the outline to be written.'),
-  previousChapters: z.array(ChapterSchema).describe('The content of the chapters that have already been written.'),
-});
-export type GenerateChapterInput = z.infer<typeof GenerateChapterInputSchema>;
-
-export type GenerateChapterOutput = z.infer<typeof ChapterSchema>;
 
 // Exported Flow Functions
 export async function generateOutline(input: GenerateOutlineInput): Promise<GenerateOutlineOutput> {

@@ -1,13 +1,14 @@
-
 "use client";
 
 import {
   generateOutline,
   generateChapter,
+} from "@/ai/flows/generate-book";
+import type {
   GenerateOutlineInput,
   GenerateOutlineOutput,
   Chapter,
-} from "@/ai/flows/generate-book";
+} from "@/ai/flows/schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,8 +37,7 @@ export default function KdpAuthorAiClient() {
 
   const handleGenerateOutline = async (e: React.FormEvent) => {
     e.preventDefault();
-    window.open('https://www.revenuecpmgate.com/rjc9y04w?key=b7dc691c90bd8cd9409315e9e54a36d0', '_blank');
-
+    
     if (!formData.title || !formData.description || !formData.details) {
       toast({
         variant: "destructive",
