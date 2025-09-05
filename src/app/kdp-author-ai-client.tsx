@@ -208,7 +208,7 @@ export default function KdpAuthorAiClient() {
                             const writtenChapter = generatedChapters.find(c => c.title === chapterOutline.title);
                             return (
                                 <AccordionItem value={`item-${index}`} key={index}>
-                                    <AccordionTrigger asChild>
+                                    <AccordionTrigger>
                                         <div className="flex items-center justify-between w-full pr-4">
                                             <div className="text-left">
                                                 <p className="font-semibold">{chapterOutline.title}</p>
