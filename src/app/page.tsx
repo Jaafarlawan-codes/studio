@@ -13,7 +13,6 @@ export default function WelcomePage() {
 
   const handleGetStartedClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    window.open('https://otieu.com/4/9277631', '_blank');
     router.push('/editor');
   };
 
