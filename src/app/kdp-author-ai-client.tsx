@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -35,6 +36,8 @@ export default function KdpAuthorAiClient() {
 
   const handleGenerateOutline = async (e: React.FormEvent) => {
     e.preventDefault();
+    window.open('https://www.revenuecpmgate.com/rjc9y04w?key=b7dc691c90bd8cd9409315e9e54a36d0', '_blank');
+
     if (!formData.title || !formData.description || !formData.details) {
       toast({
         variant: "destructive",
@@ -205,7 +208,7 @@ export default function KdpAuthorAiClient() {
                             const writtenChapter = generatedChapters.find(c => c.title === chapterOutline.title);
                             return (
                                 <AccordionItem value={`item-${index}`} key={index}>
-                                    <AccordionTrigger>
+                                    <AccordionTrigger asChild>
                                         <div className="flex items-center justify-between w-full pr-4">
                                             <div className="text-left">
                                                 <p className="font-semibold">{chapterOutline.title}</p>
