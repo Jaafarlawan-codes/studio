@@ -1,11 +1,22 @@
 
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Feather, Zap } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function WelcomePage() {
+  const router = useRouter();
+
+  const handleGetStartedClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    window.open('https://otieu.com/4/9277631', '_blank');
+    router.push('/editor');
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50/50">
       <header className="flex items-center gap-3 p-4 border-b bg-background">
@@ -32,12 +43,10 @@ export default function WelcomePage() {
             <p className="max-w-2xl mx-auto text-lg md:text-xl">
               Your personal AI assistant for writing, outlining, and publishing on Amazon KDP.
             </p>
-            <Link href="/editor">
-              <Button size="lg" className="text-lg">
-                Get Started
-                <Feather className="ml-2" />
-              </Button>
-            </Link>
+            <Button size="lg" className="text-lg" onClick={handleGetStartedClick}>
+              Get Started
+              <Feather className="ml-2" />
+            </Button>
           </div>
         </section>
 
