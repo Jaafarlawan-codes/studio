@@ -81,7 +81,7 @@ const generateOutlineFlow = ai.defineFlow(
     outputSchema: GenerateOutlineOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await outlinePrompt(input);
     return output!;
   }
 );
