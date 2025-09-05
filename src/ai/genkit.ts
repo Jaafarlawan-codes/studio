@@ -6,5 +6,4 @@ import './flows/generate-book';
 
 export const ai: Genkit = genkit({
   plugins: [googleAI()],
-  model: 'googleai/gemini-2.5-flash',
 });

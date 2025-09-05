@@ -41,6 +41,7 @@ Book Description: {{{description}}}
 Detailed Synopsis: {{{details}}}
 
 Create the chapter outline now.`,
+  model: 'googleai/gemini-1.5-flash',
 });
 
 const generateOutlineFlow = ai.defineFlow(
@@ -88,6 +89,7 @@ Chapter to write: "{{targetChapter.title}}"
 Chapter Description: "{{targetChapter.description}}"
 
 Write the full chapter content. Ensure it flows logically from the previous chapters (if any) and aligns with the overall book outline. Output only the content for this single chapter.`,
+  model: 'googleai/gemini-1.5-flash',
 });
 
 const generateChapterFlow = ai.defineFlow(
