@@ -94,6 +94,61 @@ export default function WelcomePage() {
             </div>
           </div>
         </section>
+
+        <section className="py-16 md:py-24 bg-gray-50/50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                From Idea to Bestseller
+              </h2>
+              <p className="max-w-3xl mx-auto mt-4 text-muted-foreground md:text-xl">
+                Our AI can help you craft compelling narratives in any genre.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+              <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-lg group">
+                <Image
+                  src="https://picsum.photos/300/400"
+                  alt="Book Cover 1"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  className="transition-transform duration-300 group-hover:scale-105"
+                  data-ai-hint="fantasy book"
+                />
+              </div>
+              <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-lg group">
+                <Image
+                  src="https://picsum.photos/300/401"
+                  alt="Book Cover 2"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  className="transition-transform duration-300 group-hover:scale-105"
+                   data-ai-hint="sci-fi book"
+                />
+              </div>
+              <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-lg group">
+                <Image
+                  src="https://picsum.photos/300/402"
+                  alt="Book Cover 3"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  className="transition-transform duration-300 group-hover:scale-105"
+                   data-ai-hint="romance novel"
+                />
+              </div>
+              <div className="relative aspect-[3/4] rounded-lg overflow-hidden shadow-lg group">
+                <Image
+                  src="https://picsum.photos/300/403"
+                  alt="Book Cover 4"
+                  fill
+                  style={{ objectFit: 'cover' }}
+                  className="transition-transform duration-300 group-hover:scale-105"
+                   data-ai-hint="thriller book"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
       <footer className="p-4 text-center border-t text-sm text-muted-foreground">
         © {new Date().getFullYear()} KDP Author AI. All rights reserved.
