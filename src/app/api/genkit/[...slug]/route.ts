@@ -1,7 +1,4 @@
-/**
- * @fileoverview Genkit API route for Next.js.
- */
-import {ai} from '@/ai/genkit';
-import {createApiHandler} from '@genkit-ai/next/server';
-
-export const {POST} = createApiHandler({ai});
+// This file is required for the Genkit Next.js integration.
+// It exports the configured genkit instance so that the plugin can
+// handle API requests.
+export {ai as GET, ai as POST} from '@/ai/genkit';
