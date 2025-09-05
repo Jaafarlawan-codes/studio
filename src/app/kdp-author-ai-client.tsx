@@ -1,20 +1,30 @@
-
 "use client";
 
-import { generateBook, GenerateBookInput, GenerateBookOutput } from "@/ai/flows/generate-book";
+import {
+  generateOutline,
+  generateChapter,
+  GenerateOutlineInput,
+  GenerateOutlineOutput,
+  Chapter,
+} from "@/ai/flows/generate-book";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Download, Loader2, Sparkles } from "lucide-react";
+import { BookOpen, Download, Loader2, Sparkles, Wand2 } from "lucide-react";
 import React, { useState } from "react";
 
+type ChapterOutline = GenerateOutlineOutput["chapters"][0];
+
 export default function KdpAuthorAiClient() {
-  const [formData, setFormData] = useState<GenerateBookInput>({ title: "", description: "", details: "" });
-  const [generatedBook, setGeneratedBook] = useState<GenerateBookOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<GenerateOutlineInput>({ title: "", description: "", details: "" });
+  const [outline, setOutline] = useState<GenerateOutlineOutput | null>(null);
+  const [generatedChapters, setGeneratedChapters] = useState<Chapter[]>([]);
+  const [isGeneratingOutline, setIsGeneratingOutline] = useState(false);
+  const [writingChapterIndex, setWritingChapterIndex] = useState<number | null>(null);
 
   const { toast } = useToast();
 
@@ -23,43 +33,90 @@ export default function KdpAuthorAiClient() {
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleGenerateBook = async (e: React.FormEvent) => {
+  const handleGenerateOutline = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.description || !formData.details) {
-       toast({
+      toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please fill out all fields to generate your book.",
+        description: "Please fill out all fields to generate the outline.",
       });
       return;
     }
 
-    setIsLoading(true);
-    setGeneratedBook(null);
+    setIsGeneratingOutline(true);
+    setOutline(null);
+    setGeneratedChapters([]);
 
     try {
-      const result = await generateBook(formData);
-      setGeneratedBook(result);
+      const result = await generateOutline(formData);
+      setOutline(result);
       toast({
-        title: "Book Generated Successfully!",
-        description: "Your book is ready for review and download.",
+        title: "Outline Generated!",
+        description: "Your chapter outline is ready. You can now write each chapter.",
       });
     } catch (error) {
       console.error(error);
       toast({
         variant: "destructive",
-        title: "Error Generating Book",
+        title: "Error Generating Outline",
         description: "An unexpected error occurred. Please try again.",
       });
     } finally {
-      setIsLoading(false);
+      setIsGeneratingOutline(false);
     }
   };
-  
-  const handleDownload = () => {
-    if (!generatedBook || !formData.title) return;
 
-    const bookContent = generatedBook.chapters.map(chapter => {
+  const handleGenerateChapter = async (targetChapter: ChapterOutline, index: number) => {
+    if (!outline) return;
+    setWritingChapterIndex(index);
+    try {
+      const result = await generateChapter({
+        title: formData.title,
+        description: formData.description,
+        chapterOutline: outline.chapters,
+        targetChapter: targetChapter,
+        previousChapters: generatedChapters,
+      });
+
+      setGeneratedChapters(prev => {
+        const newChapters = [...prev];
+        const existingIndex = newChapters.findIndex(c => c.title === result.title);
+        if (existingIndex > -1) {
+          newChapters[existingIndex] = result;
+        } else {
+          newChapters.push(result);
+        }
+        // This sort might be too simple, but for now it will work if titles are somewhat ordered
+        newChapters.sort((a, b) => {
+          const aIndex = outline.chapters.findIndex(oc => oc.title === a.title);
+          const bIndex = outline.chapters.findIndex(oc => oc.title === b.title);
+          return aIndex - bIndex;
+        });
+        return newChapters;
+      });
+
+      toast({
+        title: `Chapter "${result.title}" Written!`,
+        description: "The chapter has been added to your manuscript.",
+      });
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error Writing Chapter",
+        description: "An unexpected error occurred. Please try again.",
+      });
+    } finally {
+      setWritingChapterIndex(null);
+    }
+  }
+
+  const handleDownload = () => {
+    if (generatedChapters.length === 0 || !formData.title) return;
+
+    const bookContent = generatedChapters.map(chapter => {
       return `## ${chapter.title}\n\n${chapter.content}`;
     }).join('\n\n\n');
 
@@ -77,6 +134,8 @@ export default function KdpAuthorAiClient() {
     URL.revokeObjectURL(url);
   };
 
+  const isLoading = isGeneratingOutline || writingChapterIndex !== null;
+  const isFormDisabled = isLoading || outline !== null;
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50/50">
@@ -92,64 +151,87 @@ export default function KdpAuthorAiClient() {
       <main className="flex-1 p-4 md:p-8">
         <div className="max-w-4xl mx-auto grid gap-8">
             <Card className="w-full">
-              <form onSubmit={handleGenerateBook}>
+              <form onSubmit={handleGenerateOutline}>
                 <CardHeader>
                   <CardTitle>Create Your Next Bestseller</CardTitle>
-                  <CardDescription>Provide the details for your book, and let our AI bring it to life.</CardDescription>
+                  <CardDescription>Provide the details for your book, and let our AI create a chapter outline.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="title">Book Title</Label>
-                    <Input id="title" placeholder="e.g., The Last Starlight" value={formData.title} onChange={handleInputChange} disabled={isLoading} />
+                    <Input id="title" placeholder="e.g., The Last Starlight" value={formData.title} onChange={handleInputChange} disabled={isFormDisabled} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="description">Book Description</Label>
-                    <Textarea id="description" placeholder="A short, catchy summary of your book." value={formData.description} onChange={handleInputChange} disabled={isLoading} />
+                    <Textarea id="description" placeholder="A short, catchy summary of your book." value={formData.description} onChange={handleInputChange} disabled={isFormDisabled} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="details">Synopsis & Details</Label>
-                    <Textarea id="details" placeholder="Provide a detailed plot outline, character descriptions, chapter breakdown, and any specific instructions for the AI." rows={10} value={formData.details} onChange={handleInputChange} disabled={isLoading}/>
+                    <Textarea id="details" placeholder="Provide a detailed plot outline, character descriptions, and any specific instructions for the AI." rows={10} value={formData.details} onChange={handleInputChange} disabled={isFormDisabled}/>
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" disabled={isLoading} className="ml-auto">
-                    {isLoading ? <Loader2 className="animate-spin" /> : <Sparkles className="mr-2" />}
-                    Generate Book
+                   <Button type="submit" disabled={isLoading || outline !== null} className="ml-auto">
+                    {isGeneratingOutline ? <Loader2 className="animate-spin" /> : <Sparkles className="mr-2" />}
+                    Generate Outline
                   </Button>
                 </CardFooter>
               </form>
             </Card>
 
-          {isLoading && (
+          {isGeneratingOutline && (
             <div className="flex flex-col items-center justify-center p-8 text-center bg-card rounded-lg shadow-sm">
                 <Loader2 className="w-12 h-12 mb-4 animate-spin text-primary" />
-                <p className="font-semibold text-lg">Generating your masterpiece...</p>
-                <p className="text-muted-foreground">This may take a few moments. Please don't close this page.</p>
+                <p className="font-semibold text-lg">Generating your outline...</p>
+                <p className="text-muted-foreground">This may take a moment.</p>
             </div>
           )}
 
-          {generatedBook && !isLoading && (
+          {outline && !isGeneratingOutline && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
-                        <CardTitle>Your Generated Book</CardTitle>
-                        <CardDescription>Review your book below. You can download it as a text file.</CardDescription>
+                        <CardTitle>Your Book Outline</CardTitle>
+                        <CardDescription>Generate the content for each chapter below.</CardDescription>
                     </div>
-                     <Button onClick={handleDownload} variant="outline">
+                     <Button onClick={handleDownload} variant="outline" disabled={generatedChapters.length === 0}>
                         <Download className="mr-2" />
-                        Download (.txt)
+                        Download ({generatedChapters.length} / {outline.chapters.length} chapters)
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <div className="p-4 border rounded-md bg-gray-50 max-h-[600px] overflow-y-auto whitespace-pre-wrap font-body">
-                        <h2 className="text-2xl font-bold font-headline mb-4">{formData.title}</h2>
-                        {generatedBook.chapters.map((chapter, index) => (
-                          <div key={index} className="mb-8">
-                            <h3 className="text-xl font-bold font-headline mb-2">{chapter.title}</h3>
-                            <p>{chapter.content}</p>
-                          </div>
-                        ))}
-                    </div>
+                    <Accordion type="multiple" className="w-full">
+                        {outline.chapters.map((chapterOutline, index) => {
+                            const writtenChapter = generatedChapters.find(c => c.title === chapterOutline.title);
+                            return (
+                                <AccordionItem value={`item-${index}`} key={index}>
+                                    <AccordionTrigger>
+                                        <div className="flex items-center justify-between w-full pr-4">
+                                            <div className="text-left">
+                                                <p className="font-semibold">{chapterOutline.title}</p>
+                                                <p className="text-sm text-muted-foreground font-normal">{chapterOutline.description}</p>
+                                            </div>
+                                            {writingChapterIndex !== index && !writtenChapter && (
+                                                <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleGenerateChapter(chapterOutline, index); }}>
+                                                    <Wand2 className="mr-2" /> Write Chapter
+                                                </Button>
+                                            )}
+                                            {writingChapterIndex === index && <Loader2 className="animate-spin" />}
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                      {writtenChapter ? (
+                                        <div className="p-4 border rounded-md bg-gray-50 whitespace-pre-wrap font-body">
+                                            <p>{writtenChapter.content}</p>
+                                        </div>
+                                      ) : (
+                                        <p className="p-4 text-muted-foreground">Click "Write Chapter" to generate the content for this chapter.</p>
+                                      )}
+                                    </AccordionContent>
+                                </AccordionItem>
+                            )
+                        })}
+                    </Accordion>
                 </CardContent>
               </Card>
           )}
